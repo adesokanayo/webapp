@@ -95,12 +95,12 @@ func (g *getuser) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//c := session.DB(*mgo).C(Users)
 	var user Users
 	//result := c.find()
-	j, err := json.Marshal(user)
+	data, err := json.Marshal(user)
 	if err != nil {
 		panic(err)
 	}
 	w.WriteHeader(http.StatusOK)
-	w.Write(j)
+	w.Write(data)
 
 	r.Body.Close()
 
