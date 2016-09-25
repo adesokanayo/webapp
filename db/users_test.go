@@ -1,11 +1,5 @@
 package db
 
-import (
-	"log"
-
-	"gopkg.in/mgo.v2"
-)
-
 // User define the data to be stored in the users db.
 type User struct {
 	Username  string `json:"username"`
@@ -53,13 +47,14 @@ type NewUser struct {
 */
 
 //GetOneUser from the database
-func GetOneUser(db *mgo.Session, username string) error {
 
-	session := NewDB("test", Conn)
+/*
+func GetOneUser(db *mgo.Session, username string) {
+
+	session := NewDB("test", db)
 
 	defer session.Close()
 
-	//c := session.dbName("test").C("user")
 	c := session.DB("test").C("user")
 
 	index := mgo.Index{
@@ -79,7 +74,7 @@ func GetOneUser(db *mgo.Session, username string) error {
 		log.Println("unable to show users")
 	}
 
-	return nil
+	return
 
 }
 
@@ -87,14 +82,13 @@ func GetOneUser(db *mgo.Session, username string) error {
 
 //func Delete(db *mgo.Session, userId string){...}
 
-//GetAllUsers is
+//GetAllUsers is to retrieve all users on the system
 func GetAllUsers(Conn *mgo.Session, username string) ([]User, error) {
 
 	session := NewDB("test", Conn)
 
 	defer session.Close()
 
-	//c := session.dbName("test").C("user")
 	c := session.DB("test").C("user")
 
 	index := mgo.Index{
@@ -114,3 +108,4 @@ func GetAllUsers(Conn *mgo.Session, username string) ([]User, error) {
 	log.Println("Results:", result)
 	return result, nil
 }
+*/
