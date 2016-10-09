@@ -19,7 +19,7 @@ func main() {
 	Router.HandleFunc("/api/users/{username}", GetUser).Methods("GET")
 	Router.HandleFunc("/api/users", GetAllUsers).Methods("GET")
 	Router.HandleFunc("/api/users", CreateUser).Methods("POST")
-	//Router.HandleFunc("/api/users/{id}", DeleteUser).Methods("DELETE")
+	Router.HandleFunc("/api/users/{username}", DeleteUser).Methods("DELETE")
 	server := &http.Server{
 		Addr:    ":3000",
 		Handler: Router,
@@ -61,7 +61,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	err := c.Find(bson.M{"username": username}).One(&result)
 
 	if err != nil {
-		log.Println("unable to show users")
+		log.Println("User not Found")
 		fmt.Println(err)
 	}
 
@@ -105,6 +105,15 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 //CreateUser is to create new user on the platform
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 
+	s := db.CreateSession()
+	defer s.Close()
+	ru := db.NewUser{}
+
+	ru.Username = r.FormValue("username")
+	ru.Password = r.FormValue("password")
+	ru.FirstName = r.FormValue("firstname")
+	ru.LastName = r.FormValue("lastname")
+
 	var newcomer db.NewUser
 
 	decoder := json.NewDecoder(r.Body)
@@ -116,10 +125,7 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	newsession := db.CreateSession()
-
-	defer newsession.Close()
-	c := newsession.DB("test").C("users")
+	c := s.DB("test").C("users")
 
 	fmt.Println(newcomer)
 
@@ -129,7 +135,31 @@ func CreateUser(w http.ResponseWriter, r *http.Request) {
 		fmt.Println("unable to insert into db")
 	}
 
-	log.Println("Successful Insertion into Db")
+	log.Println("Successfully Inserted into Db")
 	w.WriteHeader(http.StatusCreated)
+
+}
+
+func DeleteUser(w http.ResponseWriter, r *http.Request) {
+
+	newsession := db.CreateSession()
+	defer newsession.Close()
+
+	w.Header().Set("Content-Type", "application/json")
+
+	URLParams := mux.Vars(r)
+	username := URLParams["username"]
+	fmt.Println(username)
+
+	c := newsession.DB("test").C("users")
+
+	err := c.Remove(bson.M{"username": username})
+
+	if err != nil {
+		log.Println("unable to delete users")
+		fmt.Println(err)
+	}
+
+	w.WriteHeader(http.StatusOK)
 
 }
