@@ -90,7 +90,7 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 
 	err := c.Find(bson.M{}).All(&result)
 	if err != nil {
-		fmt.Println("something gone bad ")
+		fmt.Println("Quey failed to execute ")
 	}
 
 	y, err := json.Marshal(&result)
@@ -105,6 +105,31 @@ func GetAllUsers(w http.ResponseWriter, r *http.Request) {
 //CreateUser is to create new user on the platform
 func CreateUser(w http.ResponseWriter, r *http.Request) {
 
-	//var newcomer db.NewUser
+	var newcomer db.NewUser
+
+	decoder := json.NewDecoder(r.Body)
+	err := decoder.Decode(&newcomer)
+	fmt.Println(newcomer)
+
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	newsession := db.CreateSession()
+
+	defer newsession.Close()
+	c := newsession.DB("test").C("users")
+
+	fmt.Println(newcomer)
+
+	err = c.Insert(newcomer)
+
+	if err != nil {
+		fmt.Println("unable to insert into db")
+	}
+
+	log.Println("Successful Insertion into Db")
+	w.WriteHeader(http.StatusCreated)
 
 }
