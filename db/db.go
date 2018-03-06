@@ -3,6 +3,7 @@ package db
 import (
 	"log"
 
+	_ "github.com/go-sql-driver/mysql"
 	"gopkg.in/mgo.v2"
 )
 
