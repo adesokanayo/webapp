@@ -1,38 +1,40 @@
 package db
 
 import (
+	"database/sql"
 	"log"
 
 	_ "github.com/go-sql-driver/mysql"
-	"gopkg.in/mgo.v2"
 )
 
-var mgoSession *mgo.Session
+//Conn
+var Conn *sql.DB
 
 //CreateSession creates the connection to database
-func CreateSession() *mgo.Session {
+func CreateSession() {
 
-	Conn, err := mgo.Dial("localhost")
+	Conn, err := sql.Open("mysql", "latest:latest@/latest")
 	if err != nil {
 		log.Println("Unable to connect to database")
 	}
-	Conn.SetMode(mgo.Monotonic, true)
 
-	return Conn
+	log.Println(Conn.Ping)
 
 }
 
 //GetSession gets  an existing database connection
-func GetSession() *mgo.Session {
 
-	if mgoSession == nil {
+/*
+func GetSession() *Conn {
+
+	if Conn == nil {
 
 		CreateSession()
 	}
 
-	return mgoSession
+	return Conn
 
-}
+}  */
 
 // Collection is for specific table
 //func (db *DB) Collection(col string) mgo.Collection {

@@ -1,40 +1,49 @@
 package main
 
 import (
-	"encoding/json"
+	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
 
-	"github.com/adesokanayo/webapp/db"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
-	"gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
 )
 
 func main() {
 
 	Router := mux.NewRouter().StrictSlash(false)
 	Router.HandleFunc("/api/test", Test)
-	Router.HandleFunc("/api/users/{username}", GetUser).Methods("GET")
-	Router.HandleFunc("/api/users", GetAllUsers).Methods("GET")
-	Router.HandleFunc("/api/users", CreateUser).Methods("POST")
-	Router.HandleFunc("/api/users/{username}", DeleteUser).Methods("DELETE")
+	/*
+		Router.HandleFunc("/api/users/{username}", GetUser).Methods("GET")
+		Router.HandleFunc("/api/users", GetAllUsers).Methods("GET")
+		Router.HandleFunc("/api/users", CreateUser).Methods("POST")
+		Router.HandleFunc("/api/users/{username}", DeleteUser).Methods("DELETE")
+	*/
 	server := &http.Server{
 		Addr:    ":3000",
 		Handler: Router,
 	}
 	log.Println("Listening...")
 	server.ListenAndServe()
-	db.CreateSession()
+	//db.CreateSession()
+
 }
 
 //Test Handler: I used it to test my server
 func Test(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "<h1>let's go there </h1>")
 
+	Conn, err := sql.Open("mysql", "latest:latest@/latest")
+	if err != nil {
+		panic(err)
+	}
+	fmt.Println("COnnection Open Succesfully")
+
+	log.Println(Conn.Ping)
 }
 
+/*
 //GetUser  is to get one single user
 func GetUser(w http.ResponseWriter, r *http.Request) {
 
@@ -163,3 +172,5 @@ func DeleteUser(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 }
+
+*/
