@@ -1,36 +1,77 @@
 package main
 
 import (
-	"database/sql"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
+	"github.com/adesokanayo/webapp/handlers"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 )
 
 func main() {
 
-	Router := mux.NewRouter().StrictSlash(false)
-	Router.HandleFunc("/api/test", Test)
-	/*
-		Router.HandleFunc("/api/users/{username}", GetUser).Methods("GET")
-		Router.HandleFunc("/api/users", GetAllUsers).Methods("GET")
-		Router.HandleFunc("/api/users", CreateUser).Methods("POST")
-		Router.HandleFunc("/api/users/{username}", DeleteUser).Methods("DELETE")
-	*/
-	server := &http.Server{
-		Addr:    ":3000",
-		Handler: Router,
+	//http.ListenAndServe(":1212", http.FileServer(http.Dir("public")))
+
+	serve()
+
+	//http.ListenAndServe(":1212", http.FileServer(http.Dir("public")))
+
+	//Router.HandleFunc("/api/users/{username}", GetUser).Methods("GET")
+	//Router.HandleFunc("/api/users", GetAllUsers).Methods("GET")
+	//Router.HandleFunc("/api/users", CreateUser).Methods("POST")
+	//Router.HandleFunc("/api/users/{username}", DeleteUser).Methods("DELETE")
+
+}
+
+func serve() {
+
+	port := os.Getenv("port")
+
+	if port == "" {
+		port = "1212"
 	}
-	log.Println("Listening...")
-	server.ListenAndServe()
-	//db.CreateSession()
+
+	//http.Handle("/public/", http.StripPrefix("/public/", http.FileServer(http.Dir("public"))))
+	//http.Handle("/images/", http.FileServer(http.Dir("public/images")))
+	//http.Handle("/css/", http.FileServer(http.Dir("public/css")))
+	//http.Handle("/js/", http.FileServer(http.Dir("public/js")))
+
+	http.HandleFunc("/public/", handlers.ServeResource)
+	http.HandleFunc("/images/", handlers.ServeResource)
+	http.HandleFunc("/css/", handlers.ServeResource)
+	http.HandleFunc("/js/", handlers.ServeResource)
+	http.HandleFunc("/assets/", handlers.ServeResource)
+	http.HandleFunc("/assets/css/", handlers.ServeResource)
+	http.HandleFunc("/assets/images/", handlers.ServeResource)
+	http.HandleFunc("/starters/", handlers.ServeResource)
+	http.HandleFunc("/starters/assets/", handlers.ServeResource)
+	http.HandleFunc("/starters/assetsimages/", handlers.ServeResource)
+	http.HandleFunc("/starters/assets/css/", handlers.ServeResource)
+	http.HandleFunc("/temp/", handlers.ServeResource)
+
+	//http.HandleFunc("/starters/", handlers.ServeResource)
+
+	http.HandleFunc("/login", handlers.Login)
+	http.HandleFunc("/index", handlers.Index)
+	http.HandleFunc("/register", handlers.Register)
+
+	Router := mux.NewRouter().StrictSlash(false)
+	//Router.HandleFunc("/api/test", Test)
+	http.Handle("/", Router)
+	err := http.ListenAndServe(":"+port, nil)
+	if err != nil {
+		log.Fatal("server error: there was a problem", nil)
+	} else {
+		fmt.Println("Now serving with serve method")
+	}
 
 }
 
 //Test Handler: I used it to test my server
+/*
 func Test(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprint(w, "<h1>let's go there </h1>")
 
@@ -43,134 +84,7 @@ func Test(w http.ResponseWriter, r *http.Request) {
 	log.Println(Conn.Ping)
 }
 
-/*
-//GetUser  is to get one single user
-func GetUser(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json")
-
-	URLParams := mux.Vars(r)
-	username := URLParams["username"]
-	fmt.Println(username)
-
-	result := db.User{}
-	newsession := db.CreateSession()
-
-	defer newsession.Close()
-
-	c := newsession.DB("test").C("users")
-
-	index := mgo.Index{
-		Key:    []string{"id"},
-		Unique: true,
-	}
-
-	c.EnsureIndex(index)
-
-	err := c.Find(bson.M{"username": username}).One(&result)
-
-	if err != nil {
-		log.Println("User not Found")
-		fmt.Println(err)
-	}
-
-	y, _ := json.Marshal(&result)
-	if err != nil {
-		log.Println("unable to   interpret the output")
-		fmt.Println(err)
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(y)
-
-}
-
-//GetAllUsers is handler to return all users
-func GetAllUsers(w http.ResponseWriter, r *http.Request) {
-
-	w.Header().Set("Content-Type", "application/json")
-
-	result := []db.User{}
-
-	newsession := db.CreateSession()
-
-	defer newsession.Close()
-
-	c := newsession.DB("test").C("users")
-
-	err := c.Find(bson.M{}).All(&result)
-	if err != nil {
-		fmt.Println("Quey failed to execute ")
-	}
-
-	y, err := json.Marshal(&result)
-	if err != nil {
-		log.Println("unable to call the interpret the output")
-	}
-	w.WriteHeader(http.StatusOK)
-	w.Write(y)
-
-}
-
-//CreateUser is to create new user on the platform
-func CreateUser(w http.ResponseWriter, r *http.Request) {
-
-	s := db.CreateSession()
-	defer s.Close()
-	ru := db.NewUser{}
-
-	ru.Username = r.FormValue("username")
-	ru.Password = r.FormValue("password")
-	ru.FirstName = r.FormValue("firstname")
-	ru.LastName = r.FormValue("lastname")
-
-	var newcomer db.NewUser
-
-	decoder := json.NewDecoder(r.Body)
-	err := decoder.Decode(&newcomer)
-	fmt.Println(newcomer)
-
-	if err != nil {
-		fmt.Println(err)
-		return
-	}
-
-	c := s.DB("test").C("users")
-
-	fmt.Println(newcomer)
-
-	err = c.Insert(newcomer)
-
-	if err != nil {
-		fmt.Println("unable to insert into db")
-	}
-
-	log.Println("Successfully Inserted into Db")
-	w.WriteHeader(http.StatusCreated)
-
-}
-
-func DeleteUser(w http.ResponseWriter, r *http.Request) {
-
-	newsession := db.CreateSession()
-	defer newsession.Close()
-
-	w.Header().Set("Content-Type", "application/json")
-
-	URLParams := mux.Vars(r)
-	username := URLParams["username"]
-	fmt.Println(username)
-
-	c := newsession.DB("test").C("users")
-
-	err := c.Remove(bson.M{"username": username})
-
-	if err != nil {
-		log.Println("unable to delete users")
-		fmt.Println(err)
-	}
-
-	w.WriteHeader(http.StatusOK)
-
-}
-
 */
+
+/*
+
